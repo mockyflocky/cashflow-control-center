@@ -19,11 +19,11 @@ type AuthContextType = {
   isAdmin: boolean;
 };
 
-// Satu akun admin
+// Akun admin - Anda dapat mengubah email dan password di sini
 const adminUser = {
   id: "1",
-  email: "admin@example.com",
-  password: "admin123",
+  email: "youradmin@example.com", // Ubah email admin di sini
+  password: "yourpassword", // Ubah password admin di sini
   name: "Admin",
   role: "admin" as const,
 };
