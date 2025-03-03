@@ -10,7 +10,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  PieChart
+  PieChart,
+  LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,11 +20,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface DashboardLayoutProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  allowPublic?: boolean;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
   children, 
-  requireAdmin = false 
+  requireAdmin = false,
+  allowPublic = false
 }) => {
   const { isAuthenticated, isLoading, logout, isAdmin, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -41,7 +44,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     );
   }
 
-  if (!isAuthenticated) {
+  // Only redirect if authentication is required and user is not authenticated
+  if (!allowPublic && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -144,28 +148,42 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
           
           <div className="mt-auto p-4 border-t">
-            <div className="mb-4">
-              <div className="flex items-center gap-3 px-2">
-                <div className="w-10 h-10 rounded-full bg-gray-200 grid place-items-center">
-                  <span className="font-medium text-primary">
-                    {user?.name.charAt(0)}
-                  </span>
+            {isAuthenticated ? (
+              <>
+                <div className="mb-4">
+                  <div className="flex items-center gap-3 px-2">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 grid place-items-center">
+                      <span className="font-medium text-primary">
+                        {user?.name.charAt(0)}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{user?.name}</p>
+                      <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{user?.name}</p>
-                  <p className="text-sm text-gray-500 truncate">{user?.email}</p>
-                </div>
-              </div>
-            </div>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={logout}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Log out
-            </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={logout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-primary"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign in to edit
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </aside>

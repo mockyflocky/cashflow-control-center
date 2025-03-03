@@ -18,7 +18,8 @@ import {
   Calendar,
   Trash2,
   Filter,
-  BarChart3
+  BarChart3,
+  Lock
 } from "lucide-react";
 import {
   Transaction,
@@ -38,8 +39,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recha
 import TransactionForm from "@/components/ui/TransactionForm";
 import FinanceCard from "@/components/ui/FinanceCard";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
+  const { isAuthenticated } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -91,13 +94,23 @@ const Dashboard = () => {
   });
 
   return (
-    <DashboardLayout>
+    <DashboardLayout allowPublic={true}>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage your personal finances
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Lihat laporan keuangan
+            </p>
+          </div>
+          {!isAuthenticated && (
+            <Card className="bg-blue-50 border-blue-200 p-4 flex items-center gap-2 shadow-sm">
+              <Lock className="h-5 w-5 text-blue-500" />
+              <p className="text-sm text-blue-700">
+                Silakan <a href="/login" className="font-medium underline">login</a> untuk mengedit data
+              </p>
+            </Card>
+          )}
         </div>
 
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
@@ -123,18 +136,65 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="md:col-span-1 h-full">
-            <CardHeader className="pb-3">
-              <CardTitle>Add Transaction</CardTitle>
-              <CardDescription>Record a new transaction</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TransactionForm onSuccess={loadData} />
-            </CardContent>
-          </Card>
+        {isAuthenticated && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="md:col-span-1 h-full">
+              <CardHeader className="pb-3">
+                <CardTitle>Add Transaction</CardTitle>
+                <CardDescription>Record a new transaction</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TransactionForm onSuccess={loadData} />
+              </CardContent>
+            </Card>
 
-          <Card className="md:col-span-1 h-full">
+            <Card className="md:col-span-1 h-full">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-between">
+                  <span>Expense Breakdown</span>
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                </CardTitle>
+                <CardDescription>Your spending by category</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px] flex items-center justify-center">
+                {pieChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={90}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, percent }) => 
+                          `${name}: ${(percent * 100).toFixed(0)}%`
+                        }
+                        labelLine={false}
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => formatCurrency(Number(value))} 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <p>No expense data to display</p>
+                    <p className="text-sm">Add expenses to see your breakdown</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {!isAuthenticated && pieChartData.length > 0 && (
+          <Card className="h-full">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between">
                 <span>Expense Breakdown</span>
@@ -143,40 +203,33 @@ const Dashboard = () => {
               <CardDescription>Your spending by category</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px] flex items-center justify-center">
-              {pieChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={90}
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={({ name, percent }) => 
-                        `${name}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => formatCurrency(Number(value))} 
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  <p>No expense data to display</p>
-                  <p className="text-sm">Add expenses to see your breakdown</p>
-                </div>
-              )}
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) => 
+                      `${name}: ${(percent * 100).toFixed(0)}%`
+                    }
+                    labelLine={false}
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => formatCurrency(Number(value))} 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
-        </div>
+        )}
 
         <Card>
           <CardHeader className="pb-3">
@@ -270,14 +323,16 @@ const Dashboard = () => {
                             {transaction.type === "income" ? "+" : "-"}
                             {formatCurrency(transaction.amount)}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {isAuthenticated && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(transaction.id)}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     );
