@@ -7,7 +7,7 @@ type User = {
   id: string;
   name: string;
   email: string;
-  role: "user" | "admin";
+  role: "admin";
 };
 
 type AuthContextType = {
@@ -19,23 +19,14 @@ type AuthContextType = {
   isAdmin: boolean;
 };
 
-// Mock user data
-const mockUsers = [
-  {
-    id: "1",
-    email: "user@example.com",
-    password: "password123",
-    name: "Regular User",
-    role: "user" as const,
-  },
-  {
-    id: "2",
-    email: "admin@example.com",
-    password: "admin123",
-    name: "Admin User",
-    role: "admin" as const,
-  },
-];
+// Satu akun admin
+const adminUser = {
+  id: "1",
+  email: "admin@example.com",
+  password: "admin123",
+  name: "Admin",
+  role: "admin" as const,
+};
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -63,12 +54,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const foundUser = mockUsers.find(
-      (u) => u.email === email && u.password === password
-    );
-    
-    if (foundUser) {
-      const { password, ...userWithoutPassword } = foundUser;
+    if (email === adminUser.email && password === adminUser.password) {
+      const { password, ...userWithoutPassword } = adminUser;
       setUser(userWithoutPassword);
       localStorage.setItem("user", JSON.stringify(userWithoutPassword));
       toast.success("Login successful");
@@ -94,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     login,
     logout,
-    isAdmin: user?.role === "admin",
+    isAdmin: true, // Selalu admin karena hanya ada akun admin
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

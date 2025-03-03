@@ -34,7 +34,7 @@ const Login = () => {
     <AuthLayout>
       <div className="glass-effect p-6 md:p-8 rounded-xl animate-scale-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">Welcome Back</h1>
+          <h1 className="text-3xl font-bold">Login Admin</h1>
           <p className="text-muted-foreground mt-2">
             Sign in to manage your finances
           </p>
@@ -46,7 +46,7 @@ const Login = () => {
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -87,8 +87,6 @@ const Login = () => {
           </div>
 
           <div className="text-center text-sm text-muted-foreground mt-6">
-            <p>Demo Users:</p>
-            <p className="mt-1">Regular User: user@example.com / password123</p>
             <p>Admin User: admin@example.com / admin123</p>
           </div>
         </form>
